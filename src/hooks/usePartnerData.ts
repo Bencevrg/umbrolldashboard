@@ -14,10 +14,11 @@ export const usePartnerData = () => {
     setIsLoading(true);
     try {
       const response = await fetch(WEBHOOK_URL, {
-        method: 'GET',
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ action: 'getPartners' }),
       });
 
       if (!response.ok) {

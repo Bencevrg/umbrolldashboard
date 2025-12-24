@@ -1,12 +1,107 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useMemo } from 'react';
+import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
+import { StatsCard } from '@/components/dashboard/StatsCard';
+import { PartnersTable } from '@/components/dashboard/PartnersTable';
+import { CategoryChart } from '@/components/dashboard/CategoryChart';
+import { SuccessRateChart } from '@/components/dashboard/SuccessRateChart';
+import { mockPartners } from '@/data/mockPartners';
+import { PartnerStats } from '@/types/partner';
+import { Users, TrendingUp, FileCheck, Moon, Target, AlertTriangle } from 'lucide-react';
 
 const Index = () => {
+  const stats: PartnerStats = useMemo(() => {
+    const osszesPartner = mockPartners.length;
+    const alvoPartner = mockPartners.filter(p => p.alvo).length;
+    const aktívPartner = osszesPartner - alvoPartner;
+    const atlagosSikerArany = mockPartners.reduce((acc, p) => acc + p.sikeressegi_arany, 0) / osszesPartner;
+    const osszesArajanlat = mockPartners.reduce((acc, p) => acc + p.osszes_arajanlat, 0);
+    const sikeresArajanlat = mockPartners.reduce((acc, p) => acc + p.sikeres_arajanlatok, 0);
+    
+    const kategoriaEloszlas = mockPartners.reduce(
+      (acc, p) => {
+        acc[p.kategoria]++;
+        return acc;
+      },
+      { A: 0, B: 0, C: 0, D: 0 }
+    );
+
+    return {
+      osszesPartner,
+      aktívPartner,
+      alvoPartner,
+      atlagosSikerArany,
+      osszesArajanlat,
+      sikeresArajanlat,
+      kategoriaEloszlas,
+    };
+  }, []);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <DashboardHeader />
+      
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Stats Grid */}
+        <section className="mb-8">
+          <h2 className="mb-4 text-lg font-semibold text-foreground">Áttekintés</h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            <StatsCard
+              title="Összes partner"
+              value={stats.osszesPartner}
+              icon={Users}
+              variant="primary"
+            />
+            <StatsCard
+              title="Aktív partnerek"
+              value={stats.aktívPartner}
+              icon={Target}
+              subtitle={`${((stats.aktívPartner / stats.osszesPartner) * 100).toFixed(0)}% aktív`}
+            />
+            <StatsCard
+              title="Alvó partnerek"
+              value={stats.alvoPartner}
+              icon={Moon}
+              subtitle="60+ napja inaktív"
+              variant="muted"
+            />
+            <StatsCard
+              title="Átlagos sikeresség"
+              value={`${stats.atlagosSikerArany.toFixed(1)}%`}
+              icon={TrendingUp}
+            />
+            <StatsCard
+              title="Összes árajánlat"
+              value={stats.osszesArajanlat}
+              icon={FileCheck}
+              subtitle={`${stats.sikeresArajanlat} sikeres`}
+            />
+            <StatsCard
+              title="Gyenge partnerek"
+              value={stats.kategoriaEloszlas.D}
+              icon={AlertTriangle}
+              subtitle="D kategóriás"
+              variant="muted"
+            />
+          </div>
+        </section>
+
+        {/* Charts */}
+        <section className="mb-8 grid gap-6 lg:grid-cols-2">
+          <CategoryChart data={stats.kategoriaEloszlas} />
+          <SuccessRateChart partners={mockPartners} />
+        </section>
+
+        {/* Partners Table */}
+        <section>
+          <h2 className="mb-4 text-lg font-semibold text-foreground">Partner részletek</h2>
+          <PartnersTable partners={mockPartners} />
+        </section>
+      </main>
+
+      {/* Footer */}
+      <footer className="border-t bg-card py-4 text-center text-sm text-muted-foreground">
+        © 2024 Umbroll - Partner Dashboard
+      </footer>
     </div>
   );
 };

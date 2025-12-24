@@ -4,20 +4,26 @@ import { StatsCard } from '@/components/dashboard/StatsCard';
 import { PartnersTable } from '@/components/dashboard/PartnersTable';
 import { CategoryChart } from '@/components/dashboard/CategoryChart';
 import { SuccessRateChart } from '@/components/dashboard/SuccessRateChart';
-import { mockPartners } from '@/data/mockPartners';
+import { RefreshButton } from '@/components/dashboard/RefreshButton';
+import { usePartnerData } from '@/hooks/usePartnerData';
 import { PartnerStats } from '@/types/partner';
 import { Users, TrendingUp, FileCheck, Moon, Target, AlertTriangle } from 'lucide-react';
+import { Toaster } from '@/components/ui/toaster';
 
 const Index = () => {
+  const { partners, isLoading, fetchPartners } = usePartnerData();
+
   const stats: PartnerStats = useMemo(() => {
-    const osszesPartner = mockPartners.length;
-    const alvoPartner = mockPartners.filter(p => p.alvo).length;
+    const osszesPartner = partners.length;
+    const alvoPartner = partners.filter(p => p.alvo).length;
     const aktívPartner = osszesPartner - alvoPartner;
-    const atlagosSikerArany = mockPartners.reduce((acc, p) => acc + p.sikeressegi_arany, 0) / osszesPartner;
-    const osszesArajanlat = mockPartners.reduce((acc, p) => acc + p.osszes_arajanlat, 0);
-    const sikeresArajanlat = mockPartners.reduce((acc, p) => acc + p.sikeres_arajanlatok, 0);
+    const atlagosSikerArany = partners.length > 0 
+      ? partners.reduce((acc, p) => acc + p.sikeressegi_arany, 0) / osszesPartner 
+      : 0;
+    const osszesArajanlat = partners.reduce((acc, p) => acc + p.osszes_arajanlat, 0);
+    const sikeresArajanlat = partners.reduce((acc, p) => acc + p.sikeres_arajanlatok, 0);
     
-    const kategoriaEloszlas = mockPartners.reduce(
+    const kategoriaEloszlas = partners.reduce(
       (acc, p) => {
         acc[p.kategoria]++;
         return acc;
@@ -34,7 +40,7 @@ const Index = () => {
       sikeresArajanlat,
       kategoriaEloszlas,
     };
-  }, []);
+  }, [partners]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -43,7 +49,10 @@ const Index = () => {
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Stats Grid */}
         <section className="mb-8">
-          <h2 className="mb-4 text-lg font-semibold text-foreground">Áttekintés</h2>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-foreground">Áttekintés</h2>
+            <RefreshButton onClick={fetchPartners} isLoading={isLoading} />
+          </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
             <StatsCard
               title="Összes partner"
@@ -55,7 +64,7 @@ const Index = () => {
               title="Aktív partnerek"
               value={stats.aktívPartner}
               icon={Target}
-              subtitle={`${((stats.aktívPartner / stats.osszesPartner) * 100).toFixed(0)}% aktív`}
+              subtitle={stats.osszesPartner > 0 ? `${((stats.aktívPartner / stats.osszesPartner) * 100).toFixed(0)}% aktív` : '0% aktív'}
             />
             <StatsCard
               title="Alvó partnerek"
@@ -88,13 +97,13 @@ const Index = () => {
         {/* Charts */}
         <section className="mb-8 grid gap-6 lg:grid-cols-2">
           <CategoryChart data={stats.kategoriaEloszlas} />
-          <SuccessRateChart partners={mockPartners} />
+          <SuccessRateChart partners={partners} />
         </section>
 
         {/* Partners Table */}
         <section>
           <h2 className="mb-4 text-lg font-semibold text-foreground">Partner részletek</h2>
-          <PartnersTable partners={mockPartners} />
+          <PartnersTable partners={partners} />
         </section>
       </main>
 
@@ -102,6 +111,8 @@ const Index = () => {
       <footer className="border-t bg-card py-4 text-center text-sm text-muted-foreground">
         © 2024 Umbroll - Partner Dashboard
       </footer>
+      
+      <Toaster />
     </div>
   );
 };

@@ -3,11 +3,11 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { DataTable } from '@/components/dashboard/DataTable';
 import { CategoryChart } from '@/components/dashboard/CategoryChart';
-
 import { RefreshButton } from '@/components/dashboard/RefreshButton';
 import { PartnerDetailPanel } from '@/components/dashboard/PartnerDetailPanel';
 import { ExplanationCard } from '@/components/dashboard/ExplanationCard';
 import { SleepingFilters } from '@/components/dashboard/SleepingFilters';
+import { DocumentationPage } from '@/components/dashboard/DocumentationPage';
 import { usePartnerData } from '@/hooks/usePartnerData';
 import { Partner, PartnerStats } from '@/types/partner';
 import { Users, TrendingUp, FileCheck, Moon, Target, AlertTriangle, Trophy, Clock } from 'lucide-react';
@@ -210,6 +210,9 @@ const Index = () => {
             </div>
           </>
         );
+
+      case 'docs':
+        return <DocumentationPage />;
 
       default:
         return null;

@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import { Users, Trophy, AlertTriangle, Moon } from 'lucide-react';
+import { Users, Trophy, AlertTriangle, Moon, BookOpen } from 'lucide-react';
 
 interface DashboardNavProps {
   activeTab: string;
@@ -11,6 +11,7 @@ const tabs = [
   { id: 'best', label: 'Legértékesebb', icon: Trophy },
   { id: 'worst', label: 'Időhúzók', icon: AlertTriangle },
   { id: 'sleeping', label: 'Alvó partnerek', icon: Moon },
+  { id: 'docs', label: 'Leírás', icon: BookOpen },
 ];
 
 export const DashboardNav = ({ activeTab, onTabChange }: DashboardNavProps) => {

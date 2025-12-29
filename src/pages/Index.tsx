@@ -1,34 +1,38 @@
-import { useMemo } from 'react';
-import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
+import { useMemo, useState } from 'react';
+import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { StatsCard } from '@/components/dashboard/StatsCard';
-import { PartnersTable } from '@/components/dashboard/PartnersTable';
+import { DataTable } from '@/components/dashboard/DataTable';
 import { CategoryChart } from '@/components/dashboard/CategoryChart';
 import { SuccessRateChart } from '@/components/dashboard/SuccessRateChart';
 import { RefreshButton } from '@/components/dashboard/RefreshButton';
+import { PartnerDetailPanel } from '@/components/dashboard/PartnerDetailPanel';
+import { ExplanationCard } from '@/components/dashboard/ExplanationCard';
+import { SleepingFilters } from '@/components/dashboard/SleepingFilters';
 import { usePartnerData } from '@/hooks/usePartnerData';
-import { PartnerStats } from '@/types/partner';
-import { Users, TrendingUp, FileCheck, Moon, Target, AlertTriangle } from 'lucide-react';
-import { Toaster } from '@/components/ui/toaster';
+import { Partner, PartnerStats } from '@/types/partner';
+import { Users, TrendingUp, FileCheck, Moon, Target, AlertTriangle, Trophy, Clock } from 'lucide-react';
 
 const Index = () => {
-  const { partners, isLoading, fetchPartners } = usePartnerData();
+  const { partners, topBest, topWorst, sleeping, isLoading, fetchPartners } = usePartnerData();
+  const [activeTab, setActiveTab] = useState('partners');
+  const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
+  const [sleepingThreshold, setSleepingThreshold] = useState(90);
 
   const stats: PartnerStats = useMemo(() => {
     const osszesPartner = partners.length;
     const alvoPartner = partners.filter(p => p.alvo).length;
     const aktívPartner = osszesPartner - alvoPartner;
-    const atlagosSikerArany = partners.length > 0 
-      ? partners.reduce((acc, p) => acc + p.sikeressegi_arany, 0) / osszesPartner 
-      : 0;
-    const osszesArajanlat = partners.reduce((acc, p) => acc + p.osszes_arajanlat, 0);
-    const sikeresArajanlat = partners.reduce((acc, p) => acc + p.sikeres_arajanlatok, 0);
+    const osszesArajanlat = partners.reduce((acc, p) => acc + (p.osszes_arajanlat || 0), 0);
+    const sikeresArajanlat = partners.reduce((acc, p) => acc + (p.sikeres_arajanlatok || 0), 0);
+    const atlagosSikerArany = osszesArajanlat > 0 ? (sikeresArajanlat / osszesArajanlat) : 0;
     
-    const kategoriaEloszlas = partners.reduce(
+    const kategoriaEloszlas = partners.reduce<Record<string, number>>(
       (acc, p) => {
-        acc[p.kategoria]++;
+        const cat = p.kategoria || 'Ismeretlen';
+        acc[cat] = (acc[cat] || 0) + 1;
         return acc;
       },
-      { A: 0, B: 0, C: 0, D: 0 }
+      {}
     );
 
     return {
@@ -42,78 +46,198 @@ const Index = () => {
     };
   }, [partners]);
 
-  return (
-    <div className="min-h-screen bg-background">
-      <DashboardHeader />
-      
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Stats Grid */}
-        <section className="mb-8">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-foreground">Áttekintés</h2>
-            <RefreshButton onClick={fetchPartners} isLoading={isLoading} />
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-            <StatsCard
-              title="Összes partner"
-              value={stats.osszesPartner}
-              icon={Users}
-              variant="primary"
+  // Normalize global average for display
+  const globalAvgDisplay = (stats.atlagosSikerArany * 100).toFixed(1);
+
+  // Filter sleeping partners by threshold
+  const filteredSleeping = useMemo(() => {
+    const source = sleeping.length > 0 ? sleeping : partners.filter(p => p.alvo);
+    return source.filter(p => p.napok_a_legutobbi_arajanlat_ota >= sleepingThreshold);
+  }, [sleeping, partners, sleepingThreshold]);
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'partners':
+        return (
+          <>
+            {/* Stats Grid */}
+            <section className="mb-8">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-foreground">Áttekintés</h2>
+                <RefreshButton onClick={fetchPartners} isLoading={isLoading} />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+                <StatsCard
+                  title="Partnerek száma"
+                  value={stats.osszesPartner}
+                  icon={Users}
+                  variant="primary"
+                />
+                <StatsCard
+                  title="Összes árajánlat"
+                  value={stats.osszesArajanlat}
+                  icon={FileCheck}
+                  subtitle={`${stats.sikeresArajanlat} sikeres`}
+                />
+                <StatsCard
+                  title="Sikeres árajánlat"
+                  value={stats.sikeresArajanlat}
+                  icon={Target}
+                  variant="success"
+                />
+                <StatsCard
+                  title="Globális sikerességi arány"
+                  value={`${globalAvgDisplay}%`}
+                  icon={TrendingUp}
+                  subtitle="nyers arány"
+                />
+                <StatsCard
+                  title="Alvó partnerek"
+                  value={stats.alvoPartner}
+                  icon={Moon}
+                  subtitle="90+ napja inaktív"
+                  variant="muted"
+                />
+              </div>
+            </section>
+
+            {/* Charts */}
+            <section className="mb-8 grid gap-6 lg:grid-cols-2">
+              <CategoryChart data={stats.kategoriaEloszlas} />
+              <SuccessRateChart partners={partners} />
+            </section>
+
+            {/* Partners Table */}
+            <section>
+              <h2 className="mb-4 text-lg font-semibold text-foreground">Partner részletek</h2>
+              <DataTable 
+                partners={partners} 
+                onRowClick={setSelectedPartner}
+                defaultSort={{ field: 'ertek_pontszam', direction: 'desc' }}
+              />
+            </section>
+          </>
+        );
+
+      case 'best':
+        return (
+          <>
+            <div className="mb-6 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold text-foreground">Legértékesebb partnerek</h2>
+                <p className="text-muted-foreground">Magas value_score - sok sikeres árajánlat várható</p>
+              </div>
+              <RefreshButton onClick={fetchPartners} isLoading={isLoading} />
+            </div>
+
+            <ExplanationCard
+              icon={Trophy}
+              title="Miért kerültek ide?"
+              description="Ezek a partnerek sok árajánlatot generálnak, és a cég átlagánál (14-15%) jobb korrigált sikerességi aránnyal rendelkeznek. Az érték pontszám = korrigált arány × összes ajánlat."
+              variant="success"
             />
-            <StatsCard
-              title="Aktív partnerek"
-              value={stats.aktívPartner}
-              icon={Target}
-              subtitle={stats.osszesPartner > 0 ? `${((stats.aktívPartner / stats.osszesPartner) * 100).toFixed(0)}% aktív` : '0% aktív'}
-            />
-            <StatsCard
-              title="Alvó partnerek"
-              value={stats.alvoPartner}
-              icon={Moon}
-              subtitle="60+ napja inaktív"
-              variant="muted"
-            />
-            <StatsCard
-              title="Átlagos sikeresség"
-              value={`${stats.atlagosSikerArany.toFixed(1)}%`}
-              icon={TrendingUp}
-            />
-            <StatsCard
-              title="Összes árajánlat"
-              value={stats.osszesArajanlat}
-              icon={FileCheck}
-              subtitle={`${stats.sikeresArajanlat} sikeres`}
-            />
-            <StatsCard
-              title="Gyenge partnerek"
-              value={stats.kategoriaEloszlas.D}
+
+            <div className="mt-6">
+              <DataTable 
+                partners={topBest.length > 0 ? topBest : partners.slice().sort((a, b) => b.ertek_pontszam - a.ertek_pontszam)}
+                onRowClick={setSelectedPartner}
+                showRank
+                defaultSort={{ field: 'ertek_pontszam', direction: 'desc' }}
+                variant="best"
+              />
+            </div>
+          </>
+        );
+
+      case 'worst':
+        return (
+          <>
+            <div className="mb-6 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold text-foreground">Időhúzó partnerek</h2>
+                <p className="text-muted-foreground">Magas waste_score - sok sikertelen árajánlat várható</p>
+              </div>
+              <RefreshButton onClick={fetchPartners} isLoading={isLoading} />
+            </div>
+
+            <ExplanationCard
               icon={AlertTriangle}
-              subtitle="D kategóriás"
-              variant="muted"
+              title="Miért kerültek ide?"
+              description="Ezek a partnerek sok árajánlatot generálnak, de a cég átlagánál rosszabb korrigált sikerességi aránnyal. A pocsékolás pontszám = (1 - korrigált arány) × összes ajánlat."
+              variant="destructive"
             />
-          </div>
-        </section>
 
-        {/* Charts */}
-        <section className="mb-8 grid gap-6 lg:grid-cols-2">
-          <CategoryChart data={stats.kategoriaEloszlas} />
-          <SuccessRateChart partners={partners} />
-        </section>
+            <div className="mt-6">
+              <DataTable 
+                partners={topWorst.length > 0 ? topWorst : partners.slice().sort((a, b) => b.sikertelen_pontszam - a.sikertelen_pontszam)}
+                onRowClick={setSelectedPartner}
+                showRank
+                defaultSort={{ field: 'sikertelen_pontszam', direction: 'desc' }}
+                variant="worst"
+              />
+            </div>
+          </>
+        );
 
-        {/* Partners Table */}
-        <section>
-          <h2 className="mb-4 text-lg font-semibold text-foreground">Partner részletek</h2>
-          <PartnersTable partners={partners} />
-        </section>
-      </main>
+      case 'sleeping':
+        return (
+          <>
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-foreground">Alvó partnerek</h2>
+                <p className="text-muted-foreground">Régóta inaktív partnerek - reaktiválásra várnak</p>
+              </div>
+              <div className="flex items-center gap-4">
+                <SleepingFilters threshold={sleepingThreshold} onThresholdChange={setSleepingThreshold} />
+                <RefreshButton onClick={fetchPartners} isLoading={isLoading} />
+              </div>
+            </div>
 
-      {/* Footer */}
-      <footer className="border-t bg-card py-4 text-center text-sm text-muted-foreground">
-        © 2024 Umbroll - Partner Dashboard
-      </footer>
-      
-      <Toaster />
-    </div>
+            <ExplanationCard
+              icon={Clock}
+              title="Mire figyelj?"
+              description={`Ezek a partnerek ${sleepingThreshold}+ napja nem küldtek árajánlat kérést. Érdemes lehet kapcsolatba lépni velük, hogy újra aktiválódjanak.`}
+              variant="warning"
+            />
+
+            <div className="mt-6">
+              <DataTable 
+                partners={filteredSleeping}
+                onRowClick={setSelectedPartner}
+                showRank
+                defaultSort={{ field: 'napok_a_legutobbi_arajanlat_ota', direction: 'desc' }}
+                variant="sleeping"
+              />
+            </div>
+          </>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <>
+      <DashboardLayout activeTab={activeTab} onTabChange={setActiveTab}>
+        {renderContent()}
+      </DashboardLayout>
+
+      {/* Partner Detail Panel */}
+      <PartnerDetailPanel 
+        partner={selectedPartner} 
+        onClose={() => setSelectedPartner(null)}
+        globalAverage={stats.atlagosSikerArany}
+      />
+
+      {/* Overlay when panel is open */}
+      {selectedPartner && (
+        <div 
+          className="fixed inset-0 bg-background/50 backdrop-blur-sm z-40"
+          onClick={() => setSelectedPartner(null)}
+        />
+      )}
+    </>
   );
 };
 

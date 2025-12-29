@@ -1,21 +1,35 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
 interface CategoryChartProps {
-  data: {
-    A: number;
-    B: number;
-    C: number;
-    D: number;
-  };
+  data: Record<string, number>;
 }
 
+const COLORS = [
+  'hsl(145 60% 45%)',
+  'hsl(356 90% 45%)',
+  'hsl(38 92% 50%)',
+  'hsl(0 84% 60%)',
+  'hsl(220 10% 60%)',
+];
+
+const LABELS: Record<string, string> = {
+  'A': 'Kiváló',
+  'B': 'Jó',
+  'C': 'Közepes',
+  'D': 'Gyenge',
+  'MAGAS_ÉRTÉK': 'Magas érték',
+  'ROSSZ_ARÁNY': 'Rossz arány',
+  'KEVÉS_ÁRAJÁNLAT': 'Kevés ajánlat',
+};
+
 export const CategoryChart = ({ data }: CategoryChartProps) => {
-  const chartData = [
-    { name: 'A - Kiváló', value: data.A, color: 'hsl(145 60% 45%)' },
-    { name: 'B - Jó', value: data.B, color: 'hsl(356 90% 45%)' },
-    { name: 'C - Közepes', value: data.C, color: 'hsl(38 92% 50%)' },
-    { name: 'D - Gyenge', value: data.D, color: 'hsl(0 84% 60%)' },
-  ].filter(item => item.value > 0);
+  const chartData = Object.entries(data)
+    .filter(([_, value]) => value > 0)
+    .map(([key, value], index) => ({
+      name: LABELS[key] || key,
+      value,
+      color: COLORS[index % COLORS.length],
+    }));
 
   return (
     <div className="rounded-lg border bg-card p-6 shadow-card animate-fade-in">
@@ -42,7 +56,6 @@ export const CategoryChart = ({ data }: CategoryChartProps) => {
                 backgroundColor: 'hsl(var(--card))',
                 border: '1px solid hsl(var(--border))',
                 borderRadius: '8px',
-                boxShadow: '0 4px 20px -4px hsl(220 15% 20% / 0.1)',
               }}
               formatter={(value: number) => [`${value} partner`, '']}
             />

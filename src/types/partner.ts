@@ -11,8 +11,16 @@ export interface Partner {
   letrehozva: string;
   korrigalt_sikeressegi_arany: number;
   ertek_pontszam: number;
-  kategoria: 'A' | 'B' | 'C' | 'D';
+  kategoria: string;
   sikertelen_pontszam: number;
+}
+
+export interface TopPartner extends Partner {
+  rank?: number;
+}
+
+export interface SleepingPartner extends Partner {
+  days_threshold?: number;
 }
 
 export interface PartnerStats {
@@ -22,10 +30,12 @@ export interface PartnerStats {
   atlagosSikerArany: number;
   osszesArajanlat: number;
   sikeresArajanlat: number;
-  kategoriaEloszlas: {
-    A: number;
-    B: number;
-    C: number;
-    D: number;
-  };
+  kategoriaEloszlas: Record<string, number>;
+}
+
+export interface DashboardData {
+  partners: Partner[];
+  topBest: TopPartner[];
+  topWorst: TopPartner[];
+  sleeping: SleepingPartner[];
 }

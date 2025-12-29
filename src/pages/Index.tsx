@@ -3,7 +3,7 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { DataTable } from '@/components/dashboard/DataTable';
 import { CategoryChart } from '@/components/dashboard/CategoryChart';
-import { SuccessRateChart } from '@/components/dashboard/SuccessRateChart';
+
 import { RefreshButton } from '@/components/dashboard/RefreshButton';
 import { PartnerDetailPanel } from '@/components/dashboard/PartnerDetailPanel';
 import { ExplanationCard } from '@/components/dashboard/ExplanationCard';
@@ -102,9 +102,8 @@ const Index = () => {
             </section>
 
             {/* Charts */}
-            <section className="mb-8 grid gap-6 lg:grid-cols-2">
+            <section className="mb-8">
               <CategoryChart data={stats.kategoriaEloszlas} />
-              <SuccessRateChart partners={partners} />
             </section>
 
             {/* Partners Table */}

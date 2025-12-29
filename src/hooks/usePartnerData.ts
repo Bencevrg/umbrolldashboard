@@ -5,6 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const WEBHOOK_URL = 'https://n8nlocal.benceaiproject.uk/webhook/42275bdc-cab0-46a4-83be-989d0f937d52';
 
+// Csak mezőnevek normalizálása - SEMMI számítás!
 const normalizePartner = (p: Record<string, unknown>): Partner => ({
   partner: String(p.partner || p['Partner'] || ''),
   osszes_arajanlat: Number(p.osszes_arajanlat ?? p['összes_árajánlat'] ?? p.total_quotes ?? 0),
@@ -21,15 +22,6 @@ const normalizePartner = (p: Record<string, unknown>): Partner => ({
   kategoria: String(p.kategoria ?? p['kategória'] ?? p.category ?? 'KÖZEPES'),
   sikertelen_pontszam: Number(p.sikertelen_pontszam ?? p['sikertelen_pontszám'] ?? p.waste_score ?? 0),
 });
-
-const normalizeArray = <T extends Partner>(data: unknown, normalizer: (p: Record<string, unknown>) => T = normalizePartner as (p: Record<string, unknown>) => T): T[] => {
-  if (!data) return [];
-  const arr = Array.isArray(data) ? data : [];
-  return arr.map((item, index) => ({
-    ...normalizer(item as Record<string, unknown>),
-    rank: index + 1,
-  })) as T[];
-};
 
 export const usePartnerData = () => {
   const [data, setData] = useState<DashboardData>({
@@ -58,46 +50,25 @@ export const usePartnerData = () => {
 
       const responseData = await response.json();
       
-      // Handle the response - could be structured with sheets or flat array
+      // Nyers adatok - NINCS semmilyen számítás vagy szűrés!
       let partners: Partner[] = [];
       let topBest: TopPartner[] = [];
       let topWorst: TopPartner[] = [];
       let sleeping: SleepingPartner[] = [];
 
       if (Array.isArray(responseData)) {
-        // If it's a flat array, assume it's partners
-        partners = normalizeArray(responseData);
+        partners = responseData.map((p: Record<string, unknown>) => normalizePartner(p));
       } else {
-        // Handle structured response with multiple sheets
-        partners = normalizeArray(responseData.partners || responseData.data || []);
-        topBest = normalizeArray<TopPartner>(responseData.top_best_customers || responseData.topBest || []);
-        topWorst = normalizeArray<TopPartner>(responseData.top_worst_customers || responseData.topWorst || []);
-        sleeping = normalizeArray<SleepingPartner>(responseData.sleeping_customers || responseData.sleeping || []);
-      }
+        // Többtáblás válasz - közvetlenül a webhook adatai
+        const partnersRaw = responseData.partners || responseData.data || [];
+        const topBestRaw = responseData.top_best_customers || responseData.topBest || [];
+        const topWorstRaw = responseData.top_worst_customers || responseData.topWorst || [];
+        const sleepingRaw = responseData.sleeping_customers || responseData.sleeping || [];
 
-      // If we got partners but no other sheets, derive them
-      if (partners.length > 0) {
-        if (topBest.length === 0) {
-          // Sort by value_score descending for best partners
-          topBest = [...partners]
-            .sort((a, b) => b.ertek_pontszam - a.ertek_pontszam)
-            .slice(0, 20)
-            .map((p, i) => ({ ...p, rank: i + 1 }));
-        }
-        if (topWorst.length === 0) {
-          // Sort by waste_score descending for worst partners
-          topWorst = [...partners]
-            .sort((a, b) => b.sikertelen_pontszam - a.sikertelen_pontszam)
-            .slice(0, 20)
-            .map((p, i) => ({ ...p, rank: i + 1 }));
-        }
-        if (sleeping.length === 0) {
-          // Filter sleeping partners (90+ days)
-          sleeping = partners
-            .filter(p => p.alvo || p.napok_a_legutobbi_arajanlat_ota >= 90)
-            .sort((a, b) => b.napok_a_legutobbi_arajanlat_ota - a.napok_a_legutobbi_arajanlat_ota)
-            .map((p, i) => ({ ...p, rank: i + 1 }));
-        }
+        partners = (Array.isArray(partnersRaw) ? partnersRaw : []).map((p: Record<string, unknown>) => normalizePartner(p));
+        topBest = (Array.isArray(topBestRaw) ? topBestRaw : []).map((p: Record<string, unknown>, i: number) => ({ ...normalizePartner(p), rank: i + 1 }));
+        topWorst = (Array.isArray(topWorstRaw) ? topWorstRaw : []).map((p: Record<string, unknown>, i: number) => ({ ...normalizePartner(p), rank: i + 1 }));
+        sleeping = (Array.isArray(sleepingRaw) ? sleepingRaw : []).map((p: Record<string, unknown>, i: number) => ({ ...normalizePartner(p), rank: i + 1 }));
       }
 
       setData({ partners, topBest, topWorst, sleeping });

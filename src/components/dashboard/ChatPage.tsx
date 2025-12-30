@@ -1,0 +1,166 @@
+import { useState } from 'react';
+import { Send, Bot, User } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
+
+interface Message {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+}
+
+const WEBHOOK_URL = 'https://n8nlocal.benceaiproject.uk/webhook/4b52e316-eeb7-43e8-887e-bad87a178da4';
+
+export const ChatPage = () => {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const sendMessage = async () => {
+    if (!input.trim() || isLoading) return;
+
+    const userMessage: Message = {
+      id: crypto.randomUUID(),
+      role: 'user',
+      content: input.trim(),
+      timestamp: new Date(),
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInput('');
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: userMessage.content,
+          history: messages.map(m => ({ role: m.role, content: m.content })),
+        }),
+      });
+
+      const data = await response.text();
+      
+      const assistantMessage: Message = {
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        content: data || 'Válasz érkezett.',
+        timestamp: new Date(),
+      };
+
+      setMessages(prev => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      const errorMessage: Message = {
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        content: 'Hiba történt az üzenet küldése közben. Kérlek próbáld újra.',
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
+  return (
+    <div className="flex flex-col h-[calc(100vh-180px)] max-w-4xl mx-auto">
+      <div className="mb-4">
+        <h2 className="text-2xl font-bold text-foreground">Adatok Chat</h2>
+        <p className="text-muted-foreground">Kérdezz az adataidról</p>
+      </div>
+
+      <div className="flex-1 border rounded-lg bg-card overflow-hidden flex flex-col">
+        <ScrollArea className="flex-1 p-4">
+          {messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground py-12">
+              <Bot className="h-12 w-12 mb-4 opacity-50" />
+              <p className="text-lg font-medium">Üdvözöllek!</p>
+              <p className="text-sm">Tedd fel kérdéseidet az adataiddal kapcsolatban.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={cn(
+                    'flex gap-3 items-start',
+                    message.role === 'user' ? 'flex-row-reverse' : ''
+                  )}
+                >
+                  <div
+                    className={cn(
+                      'flex h-8 w-8 shrink-0 items-center justify-center rounded-full',
+                      message.role === 'user'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-muted-foreground'
+                    )}
+                  >
+                    {message.role === 'user' ? (
+                      <User className="h-4 w-4" />
+                    ) : (
+                      <Bot className="h-4 w-4" />
+                    )}
+                  </div>
+                  <div
+                    className={cn(
+                      'rounded-lg px-4 py-2 max-w-[80%]',
+                      message.role === 'user'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-foreground'
+                    )}
+                  >
+                    <p className="whitespace-pre-wrap">{message.content}</p>
+                  </div>
+                </div>
+              ))}
+              {isLoading && (
+                <div className="flex gap-3 items-start">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                    <Bot className="h-4 w-4" />
+                  </div>
+                  <div className="rounded-lg px-4 py-2 bg-muted">
+                    <div className="flex gap-1">
+                      <span className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <span className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <span className="h-2 w-2 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </ScrollArea>
+
+        <div className="border-t p-4">
+          <div className="flex gap-2">
+            <Input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Írd be az üzeneted..."
+              disabled={isLoading}
+              className="flex-1"
+            />
+            <Button onClick={sendMessage} disabled={!input.trim() || isLoading}>
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};

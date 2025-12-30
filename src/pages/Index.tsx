@@ -8,6 +8,7 @@ import { PartnerDetailPanel } from '@/components/dashboard/PartnerDetailPanel';
 import { ExplanationCard } from '@/components/dashboard/ExplanationCard';
 import { SleepingFilters } from '@/components/dashboard/SleepingFilters';
 import { DocumentationPage } from '@/components/dashboard/DocumentationPage';
+import { ChatPage } from '@/components/dashboard/ChatPage';
 import { usePartnerData } from '@/hooks/usePartnerData';
 import { Partner, PartnerStats } from '@/types/partner';
 import { Users, TrendingUp, FileCheck, Moon, Target, AlertTriangle, Trophy, Clock } from 'lucide-react';
@@ -213,6 +214,9 @@ const Index = () => {
 
       case 'docs':
         return <DocumentationPage />;
+
+      case 'chat':
+        return <ChatPage />;
 
       default:
         return null;

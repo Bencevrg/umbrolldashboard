@@ -47,10 +47,19 @@ export const ChatPage = () => {
 
       const data = await response.text();
       
+      // Parse JSON response and extract output field
+      let content = 'Válasz érkezett.';
+      try {
+        const parsed = JSON.parse(data);
+        content = parsed.output || parsed.message || data;
+      } catch {
+        content = data;
+      }
+      
       const assistantMessage: Message = {
         id: crypto.randomUUID(),
         role: 'assistant',
-        content: data || 'Válasz érkezett.',
+        content,
         timestamp: new Date(),
       };
 

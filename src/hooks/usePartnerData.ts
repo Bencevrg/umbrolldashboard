@@ -3,7 +3,7 @@ import { Partner, TopPartner, SleepingPartner, DashboardData } from '@/types/par
 import { mockPartners } from '@/data/mockPartners';
 import { useToast } from '@/hooks/use-toast';
 
-const WEBHOOK_URL = 'https://n8nlocal.benceaiproject.uk/webhook-test/42275bdc-cab0-46a4-83be-989d0f937d52';
+const WEBHOOK_URL = 'https://n8nlocal.benceaiproject.uk/webhook/42275bdc-cab0-46a4-83be-989d0f937d52';
 
 // Csak mezőnevek normalizálása - SEMMI számítás!
 const normalizePartner = (p: Record<string, unknown>): Partner => ({

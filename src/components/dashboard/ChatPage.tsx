@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Send, Bot, User } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Send, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -18,6 +18,14 @@ export const ChatPage = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, isLoading]);
 
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
@@ -136,6 +144,7 @@ export const ChatPage = () => {
                   </div>
                 </div>
               )}
+              <div ref={scrollRef} />
             </div>
           )}
         </ScrollArea>

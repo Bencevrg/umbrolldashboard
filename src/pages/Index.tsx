@@ -138,11 +138,11 @@ const Index = () => {
             />
 
             <div className="mt-6">
-              <DataTable 
-                partners={topBest.length > 0 ? topBest : partners.slice().sort((a, b) => b.ertek_pontszam - a.ertek_pontszam)}
+            <DataTable 
+                partners={(topBest.length > 0 ? topBest : partners.slice().sort((a, b) => b.ertek_pontszam - a.ertek_pontszam)).slice().sort((a, b) => a.partner.localeCompare(b.partner))}
                 onRowClick={setSelectedPartner}
                 showRank
-                defaultSort={{ field: 'ertek_pontszam', direction: 'desc' }}
+                defaultSort={{ field: 'partner', direction: 'asc' }}
                 variant="best"
               />
             </div>
@@ -168,11 +168,11 @@ const Index = () => {
             />
 
             <div className="mt-6">
-              <DataTable 
-                partners={topWorst.length > 0 ? topWorst : partners.slice().sort((a, b) => b.sikertelen_pontszam - a.sikertelen_pontszam)}
+            <DataTable 
+                partners={(topWorst.length > 0 ? topWorst : partners.slice().sort((a, b) => b.sikertelen_pontszam - a.sikertelen_pontszam)).slice().sort((a, b) => a.partner.localeCompare(b.partner))}
                 onRowClick={setSelectedPartner}
                 showRank
-                defaultSort={{ field: 'sikertelen_pontszam', direction: 'desc' }}
+                defaultSort={{ field: 'partner', direction: 'asc' }}
                 variant="worst"
               />
             </div>

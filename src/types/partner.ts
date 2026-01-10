@@ -1,3 +1,10 @@
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+}
+
 export interface Partner {
   partner: string;
   osszes_arajanlat: number;

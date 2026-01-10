@@ -1,21 +1,20 @@
-import { useState, useRef, useEffect } from 'react';
-import { Send, Bot } from 'lucide-react';
+import { useRef, useEffect, useState } from 'react';
+import { Send, Bot, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-
-interface Message {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-}
+import { ChatMessage } from '@/types/partner';
 
 const WEBHOOK_URL = 'https://n8nlocal.benceaiproject.uk/webhook/4b52e316-eeb7-43e8-887e-bad87a178da4';
 
-export const ChatPage = () => {
-  const [messages, setMessages] = useState<Message[]>([]);
+interface ChatPageProps {
+  messages: ChatMessage[];
+  setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
+  onClearChat: () => void;
+}
+
+export const ChatPage = ({ messages, setMessages, onClearChat }: ChatPageProps) => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -30,7 +29,7 @@ export const ChatPage = () => {
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
 
-    const userMessage: Message = {
+    const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: 'user',
       content: input.trim(),
@@ -64,7 +63,7 @@ export const ChatPage = () => {
         content = data;
       }
       
-      const assistantMessage: Message = {
+      const assistantMessage: ChatMessage = {
         id: crypto.randomUUID(),
         role: 'assistant',
         content,
@@ -74,7 +73,7 @@ export const ChatPage = () => {
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
       console.error('Error sending message:', error);
-      const errorMessage: Message = {
+      const errorMessage: ChatMessage = {
         id: crypto.randomUUID(),
         role: 'assistant',
         content: 'Hiba történt az üzenet küldése közben. Kérlek próbáld újra.',
@@ -95,9 +94,22 @@ export const ChatPage = () => {
 
   return (
     <div className="flex flex-col h-[calc(100vh-180px)] max-w-4xl mx-auto">
-      <div className="mb-4">
-        <h2 className="text-2xl font-bold text-foreground">Adatok Chat</h2>
-        <p className="text-muted-foreground">Kérdezz az adataidról</p>
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-foreground">Adatok Chat</h2>
+          <p className="text-muted-foreground">Kérdezz az adataidról</p>
+        </div>
+        {messages.length > 0 && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={onClearChat}
+            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Csevegés törlése
+          </Button>
+        )}
       </div>
 
       <div className="flex-1 border rounded-lg bg-card overflow-hidden flex flex-col">

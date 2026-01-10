@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { DataTable } from '@/components/dashboard/DataTable';
@@ -11,7 +11,7 @@ import { DocumentationPage } from '@/components/dashboard/DocumentationPage';
 import { ChatPage } from '@/components/dashboard/ChatPage';
 import { ProductCategoriesPage } from '@/components/dashboard/ProductCategoriesPage';
 import { usePartnerData } from '@/hooks/usePartnerData';
-import { Partner, PartnerStats } from '@/types/partner';
+import { Partner, PartnerStats, ChatMessage } from '@/types/partner';
 import { Users, TrendingUp, FileCheck, Moon, Target, AlertTriangle, Trophy, Clock } from 'lucide-react';
 
 const Index = () => {
@@ -19,6 +19,11 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState('partners');
   const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
   const [sleepingThreshold, setSleepingThreshold] = useState(90);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+
+  const clearChatMessages = useCallback(() => {
+    setChatMessages([]);
+  }, []);
 
   const stats: PartnerStats = useMemo(() => {
     const osszesPartner = partners.length;
@@ -226,7 +231,13 @@ const Index = () => {
         return <DocumentationPage />;
 
       case 'chat':
-        return <ChatPage />;
+        return (
+          <ChatPage 
+            messages={chatMessages} 
+            setMessages={setChatMessages} 
+            onClearChat={clearChatMessages}
+          />
+        );
 
       default:
         return null;

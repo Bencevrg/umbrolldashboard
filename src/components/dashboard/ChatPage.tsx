@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState } from 'react';
-import { Send, Bot, Trash2 } from 'lucide-react';
+import { Send, Bot, Trash2, Copy, Check } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -130,15 +131,31 @@ export const ChatPage = ({ messages, setMessages, onClearChat }: ChatPageProps) 
                     message.role === 'user' ? 'justify-end' : 'justify-start'
                   )}
                 >
-                  <div
-                    className={cn(
-                      'rounded-2xl px-4 py-3 max-w-[85%] shadow-sm',
-                      message.role === 'user'
-                        ? 'bg-primary text-primary-foreground rounded-br-md'
-                        : 'bg-muted text-foreground rounded-bl-md'
+                  <div className="flex flex-col gap-1 max-w-[85%]">
+                    {message.role === 'assistant' && (
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(message.content);
+                          toast({
+                            description: "Szöveg vágólapra másolva!",
+                          });
+                        }}
+                        className="self-start p-1 rounded hover:bg-muted-foreground/20 transition-colors text-muted-foreground hover:text-foreground"
+                        title="Másolás vágólapra"
+                      >
+                        <Copy className="h-3.5 w-3.5" />
+                      </button>
                     )}
-                  >
-                    <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</p>
+                    <div
+                      className={cn(
+                        'rounded-2xl px-4 py-3 shadow-sm',
+                        message.role === 'user'
+                          ? 'bg-primary text-primary-foreground rounded-br-md'
+                          : 'bg-muted text-foreground rounded-bl-md'
+                      )}
+                    >
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</p>
+                    </div>
                   </div>
                 </div>
               ))}

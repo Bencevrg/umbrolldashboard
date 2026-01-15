@@ -71,7 +71,12 @@ export const ChatPage = ({ messages, setMessages, onClearChat }: ChatPageProps) 
       let content = 'Válasz érkezett.';
       try {
         const parsed = JSON.parse(data);
-        content = parsed.output || parsed.message || data;
+        // Handle array format: [{"output": "..."}]
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          content = parsed[0].output || parsed[0].message || JSON.stringify(parsed[0]);
+        } else {
+          content = parsed.output || parsed.message || data;
+        }
       } catch {
         content = data;
       }

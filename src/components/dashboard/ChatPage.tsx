@@ -8,7 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { ChatMessage } from '@/types/partner';
 
-const WEBHOOK_URL = 'https://bencevrg.app.n8n.cloud/webhook-test/87270230-ca97-4dad-812a-9c90c1394484';
+const WEBHOOK_URL = 'https://bencevrg.app.n8n.cloud/webhook/87270230-ca97-4dad-812a-9c90c1394484';
 
 const getSessionId = (): string => {
   const STORAGE_KEY = 'chat_session_id';

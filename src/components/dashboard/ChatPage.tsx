@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState } from 'react';
-import { Send, Bot, Trash2, Copy, Check } from 'lucide-react';
+import { Send, Bot, Trash2, Copy } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -165,7 +166,15 @@ export const ChatPage = ({ messages, setMessages, onClearChat }: ChatPageProps) 
                           : 'bg-muted text-foreground rounded-bl-md'
                       )}
                     >
-                      <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</p>
+                      {message.role === 'assistant' ? (
+                        <div className="text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-ul:my-1 prose-li:my-0">
+                          <ReactMarkdown>
+                            {message.content}
+                          </ReactMarkdown>
+                        </div>
+                      ) : (
+                        <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</p>
+                      )}
                     </div>
                   </div>
                 </div>

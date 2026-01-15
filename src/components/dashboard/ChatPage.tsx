@@ -7,7 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { ChatMessage } from '@/types/partner';
 
-const WEBHOOK_URL = 'https://n8nlocal.benceaiproject.uk/webhook/4b52e316-eeb7-43e8-887e-bad87a178da4';
+const WEBHOOK_URL = 'https://bencevrg.app.n8n.cloud/webhook-test/87270230-ca97-4dad-812a-9c90c1394484';
 
 interface ChatPageProps {
   messages: ChatMessage[];

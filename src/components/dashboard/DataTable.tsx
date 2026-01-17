@@ -218,7 +218,7 @@ export const DataTable = ({
                     onClick={() => handleSort('sikertelen_pontszam')}
                   >
                     <div className="flex items-center justify-end gap-2">
-                      Pocsékolás
+                      Veszteség
                       <SortIcon field="sikertelen_pontszam" />
                     </div>
                   </TableHead>

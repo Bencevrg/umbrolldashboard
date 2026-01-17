@@ -169,7 +169,7 @@ const Index = () => {
             <ExplanationCard
               icon={AlertTriangle}
               title="Miért kerültek ide?"
-              description="Ezek a partnerek sok árajánlatot generálnak, de a cég átlagánál rosszabb korrigált sikerességi aránnyal. A pocsékolás pontszám = (1 - korrigált arány) × összes ajánlat."
+              description="Ezek a partnerek sok árajánlatot generálnak, de a cég átlagánál rosszabb korrigált sikerességi aránnyal. A veszteség pontszám = (1 - korrigált arány) × összes ajánlat."
               variant="destructive"
             />
 

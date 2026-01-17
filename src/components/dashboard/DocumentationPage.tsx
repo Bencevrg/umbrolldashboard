@@ -96,7 +96,7 @@ export const DocumentationPage = () => {
               <div>
                 <h4 className="font-medium">sikertelen_pontszám (waste_score)</h4>
                 <p className="text-muted-foreground text-sm">
-                  Ez a "pocsékolás" / "időhúzás" jellegű pontszám:
+                  Ez a "veszteség" / "időhúzás" jellegű pontszám:
                 </p>
                 <code className="block bg-muted px-2 py-1 rounded mt-1 text-sm">waste_score = (1 - adjusted_completion_rate) * total_quotes</code>
                 <p className="text-muted-foreground text-sm mt-2">

@@ -1,14 +1,20 @@
 import { useRef, useEffect, useState } from 'react';
-import { Send, Bot, Trash2, Copy } from 'lucide-react';
+import { Send, Bot, Trash2, Copy, Zap, Brain } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
 import { ChatMessage } from '@/types/partner';
 
-const WEBHOOK_URL = 'https://bencevrg.app.n8n.cloud/webhook/87270230-ca97-4dad-812a-9c90c1394484';
+const WEBHOOK_URLS = {
+  quick: 'https://bencevrg.app.n8n.cloud/webhook/87270230-ca97-4dad-812a-9c90c1394484',
+  thinking: 'https://bencevrg.app.n8n.cloud/webhook/abbd5cc8-81b1-433d-9d70-52efce34799d',
+};
+
+type ChatMode = 'quick' | 'thinking';
 
 const getSessionId = (): string => {
   const STORAGE_KEY = 'chat_session_id';
@@ -29,6 +35,7 @@ interface ChatPageProps {
 export const ChatPage = ({ messages, setMessages, onClearChat }: ChatPageProps) => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [chatMode, setChatMode] = useState<ChatMode>('quick');
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when messages change
@@ -53,7 +60,7 @@ export const ChatPage = ({ messages, setMessages, onClearChat }: ChatPageProps) 
     setIsLoading(true);
 
     try {
-      const response = await fetch(WEBHOOK_URL, {
+      const response = await fetch(WEBHOOK_URLS[chatMode], {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -117,17 +124,42 @@ export const ChatPage = ({ messages, setMessages, onClearChat }: ChatPageProps) 
           <h2 className="text-2xl font-bold text-foreground">Adatok Chat</h2>
           <p className="text-muted-foreground">Kérdezz az adataidról</p>
         </div>
-        {messages.length > 0 && (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={onClearChat}
-            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+        <div className="flex items-center gap-3">
+          <ToggleGroup 
+            type="single" 
+            value={chatMode} 
+            onValueChange={(value) => value && setChatMode(value as ChatMode)}
+            className="bg-muted rounded-lg p-1"
           >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Csevegés törlése
-          </Button>
-        )}
+            <ToggleGroupItem 
+              value="quick" 
+              aria-label="Gyors mód"
+              className="data-[state=on]:bg-background data-[state=on]:shadow-sm px-3 py-1.5 text-sm"
+            >
+              <Zap className="h-4 w-4 mr-1.5" />
+              Gyors
+            </ToggleGroupItem>
+            <ToggleGroupItem 
+              value="thinking" 
+              aria-label="Gondolkodó mód"
+              className="data-[state=on]:bg-background data-[state=on]:shadow-sm px-3 py-1.5 text-sm"
+            >
+              <Brain className="h-4 w-4 mr-1.5" />
+              Gondolkodó
+            </ToggleGroupItem>
+          </ToggleGroup>
+          {messages.length > 0 && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={onClearChat}
+              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Csevegés törlése
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="flex-1 border rounded-lg bg-card overflow-hidden flex flex-col">

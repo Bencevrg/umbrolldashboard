@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from 'react';
 import { Send, Bot, Trash2, Copy, Zap, Brain } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
+import Markdown from 'react-markdown';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -204,21 +204,26 @@ export const ChatPage = ({ messages, setMessages, onClearChat }: ChatPageProps) 
                       )}
                     >
                       {message.role === 'assistant' ? (
-                        <div className="text-sm leading-relaxed prose prose-sm dark:prose-invert max-w-none 
-                          prose-p:my-2 prose-p:leading-relaxed
-                          prose-ul:my-2 prose-ul:pl-4 prose-ul:list-disc
-                          prose-ol:my-2 prose-ol:pl-4 prose-ol:list-decimal
-                          prose-li:my-1 prose-li:leading-relaxed
-                          prose-headings:font-semibold prose-headings:mt-3 prose-headings:mb-2
-                          prose-h1:text-lg prose-h2:text-base prose-h3:text-sm
-                          prose-strong:font-semibold prose-strong:text-foreground
-                          prose-code:bg-muted-foreground/20 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-xs
-                          prose-pre:bg-muted-foreground/10 prose-pre:p-3 prose-pre:rounded-lg prose-pre:overflow-x-auto
-                          prose-blockquote:border-l-2 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:my-2
-                          [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
-                          <ReactMarkdown>
+                        <div className="text-sm leading-relaxed max-w-none">
+                          <Markdown
+                            components={{
+                              h1: ({ children }) => <h1 className="text-xl font-bold mt-4 mb-2 first:mt-0">{children}</h1>,
+                              h2: ({ children }) => <h2 className="text-lg font-semibold mt-3 mb-2 first:mt-0">{children}</h2>,
+                              h3: ({ children }) => <h3 className="text-base font-semibold mt-3 mb-1 first:mt-0">{children}</h3>,
+                              h4: ({ children }) => <h4 className="text-sm font-semibold mt-2 mb-1 first:mt-0">{children}</h4>,
+                              p: ({ children }) => <p className="my-2 leading-relaxed first:mt-0 last:mb-0">{children}</p>,
+                              strong: ({ children }) => <strong className="font-bold">{children}</strong>,
+                              em: ({ children }) => <em className="italic">{children}</em>,
+                              ul: ({ children }) => <ul className="my-2 pl-5 list-disc space-y-1">{children}</ul>,
+                              ol: ({ children }) => <ol className="my-2 pl-5 list-decimal space-y-1">{children}</ol>,
+                              li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+                              code: ({ children }) => <code className="bg-muted-foreground/20 px-1.5 py-0.5 rounded text-xs">{children}</code>,
+                              pre: ({ children }) => <pre className="bg-muted-foreground/10 p-3 rounded-lg overflow-x-auto my-2">{children}</pre>,
+                              blockquote: ({ children }) => <blockquote className="border-l-2 border-primary pl-4 italic my-2">{children}</blockquote>,
+                            }}
+                          >
                             {message.content.replace(/\\n/g, '\n')}
-                          </ReactMarkdown>
+                          </Markdown>
                         </div>
                       ) : (
                         <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</p>

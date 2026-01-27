@@ -64,6 +64,7 @@ export const ChatPage = ({ messages, setMessages, onClearChat }: ChatPageProps) 
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-API-Key': 'mZy0LKP0MjZAFZEiA8JtoIU0vUWZIQHP',
         },
         body: JSON.stringify({
           message: userMessage.content,

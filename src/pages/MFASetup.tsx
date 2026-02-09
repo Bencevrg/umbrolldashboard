@@ -9,7 +9,7 @@ import { Shield, Mail } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 
 const MFASetup = () => {
-  const { user, refreshRole } = useAuth();
+  const { user, mfaConfigured, refreshRole } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -170,6 +170,12 @@ const MFASetup = () => {
               <p className="text-sm text-muted-foreground">Kód küldése az email címedre</p>
             </div>
           </Button>
+
+          {mfaConfigured && (
+            <Button variant="ghost" className="w-full" onClick={() => navigate('/')}>
+              Vissza
+            </Button>
+          )}
         </CardContent>
       </Card>
     </div>

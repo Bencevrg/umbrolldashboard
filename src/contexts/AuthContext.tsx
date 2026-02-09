@@ -11,6 +11,7 @@ interface AuthState {
   isApproved: boolean;
   mfaVerified: boolean;
   mfaRequired: boolean;
+  mfaConfigured: boolean;
   loading: boolean;
 }
 
@@ -30,6 +31,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     isApproved: false,
     mfaVerified: false,
     mfaRequired: false,
+    mfaConfigured: false,
     loading: true,
   });
 
@@ -54,6 +56,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         role,
         isApproved,
         mfaRequired,
+        mfaConfigured: mfaRequired,
         loading: false,
       }));
     } catch {
@@ -83,6 +86,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             role: null,
             isApproved: false,
             mfaRequired: false,
+            mfaConfigured: false,
             mfaVerified: false,
             loading: false,
           }));
@@ -111,6 +115,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       isApproved: false,
       mfaVerified: false,
       mfaRequired: false,
+      mfaConfigured: false,
       loading: false,
     });
   }, []);

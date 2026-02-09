@@ -22,16 +22,10 @@ const MFASetup = () => {
     if (!user) return;
     setLoading(true);
     try {
-      // Generate a TOTP secret
+      // Generate a TOTP secret but DON'T write to DB yet
+      // Only save after successful verification to avoid overwriting existing verified MFA
       const secret = generateTotpSecret();
       const uri = `otpauth://totp/Umbroll:${user.email}?secret=${secret}&issuer=Umbroll`;
-
-      await supabase.from('user_mfa_settings').upsert({
-        user_id: user.id,
-        mfa_type: 'totp',
-        totp_secret: secret,
-        is_verified: false,
-      }, { onConflict: 'user_id' });
 
       setTotpSecret(secret);
       setTotpUri(uri);
@@ -50,7 +44,8 @@ const MFASetup = () => {
       await supabase.from('user_mfa_settings').upsert({
         user_id: user.id,
         mfa_type: 'email',
-        is_verified: true, // Email MFA is verified immediately
+        is_verified: true,
+        totp_secret: null,
       }, { onConflict: 'user_id' });
 
       await refreshRole();
@@ -67,6 +62,14 @@ const MFASetup = () => {
     if (!user || !totpSecret) return;
     setLoading(true);
     try {
+      // First save the secret temporarily so the edge function can verify
+      await supabase.from('user_mfa_settings').upsert({
+        user_id: user.id,
+        mfa_type: 'totp',
+        totp_secret: totpSecret,
+        is_verified: false,
+      }, { onConflict: 'user_id' });
+
       const { data, error } = await supabase.functions.invoke('verify-mfa', {
         body: { userId: user.id, code: verificationCode, mfaType: 'totp' },
       });
@@ -77,6 +80,7 @@ const MFASetup = () => {
         return;
       }
 
+      // Only mark as verified after successful code check
       await supabase.from('user_mfa_settings').update({
         is_verified: true,
       }).eq('user_id', user.id);
@@ -91,15 +95,13 @@ const MFASetup = () => {
     }
   };
 
-  const skipMfa = () => navigate('/');
-
   if (selectedType === 'totp' && totpUri) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
         <Card className="w-full max-w-md shadow-card">
           <CardHeader className="text-center">
             <CardTitle>TOTP beállítás</CardTitle>
-          <CardDescription>Olvasd be a QR kódot az Authenticator alkalmazásoddal</CardDescription>
+            <CardDescription>Olvasd be a QR kódot az Authenticator alkalmazásoddal</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex justify-center">
@@ -168,17 +170,12 @@ const MFASetup = () => {
               <p className="text-sm text-muted-foreground">Kód küldése az email címedre</p>
             </div>
           </Button>
-
-          <Button variant="ghost" className="w-full" onClick={skipMfa}>
-            Később állítom be
-          </Button>
         </CardContent>
       </Card>
     </div>
   );
 };
 
-// Simple TOTP helpers (base32)
 function generateTotpSecret(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
   let secret = '';

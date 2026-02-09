@@ -1,9 +1,10 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 
 export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { session, isApproved, mfaRequired, mfaVerified, loading, signOut } = useAuth();
+  const { session, isApproved, mfaRequired, mfaVerified, mfaConfigured, loading, signOut } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -25,6 +26,12 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       </div>
     );
   }
+
+  // Redirect to MFA setup if not configured (but not if already on /mfa-setup)
+  if (!mfaConfigured && location.pathname !== '/mfa-setup') {
+    return <Navigate to="/mfa-setup" replace />;
+  }
+
   if (mfaRequired && !mfaVerified) return <Navigate to="/mfa-verify" replace />;
 
   return <>{children}</>;

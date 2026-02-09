@@ -142,8 +142,8 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("Error:", error);
-    return new Response(JSON.stringify({ error: (error as Error).message }), {
+    console.error("verify-mfa error:", error);
+    return new Response(JSON.stringify({ error: "Váratlan hiba történt. Próbáld újra." }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

@@ -53,6 +53,24 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Rate limit: max 3 code requests per 10 minutes
+    const serviceClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const { data: mfaRecord } = await serviceClient
+      .from("user_mfa_settings")
+      .select("updated_at")
+      .eq("user_id", userId)
+      .single();
+
+    if (mfaRecord?.updated_at) {
+      const timeSinceLastUpdate = Date.now() - new Date(mfaRecord.updated_at).getTime();
+      if (timeSinceLastUpdate < 2 * 60 * 1000) {
+        return new Response(JSON.stringify({ error: "Túl gyakori kódkérés. Várj 2 percet." }), {
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     // Get user email
     const { data: userData } = await supabase.auth.getUser();
     const userEmail = userData?.user?.email;
@@ -68,7 +86,6 @@ Deno.serve(async (req) => {
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 min
 
     // Store code in DB using service role
-    const serviceClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     await serviceClient
       .from("user_mfa_settings")
       .update({
@@ -118,8 +135,8 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("Error:", error);
-    return new Response(JSON.stringify({ error: (error as Error).message }), {
+    console.error("send-mfa-code error:", error);
+    return new Response(JSON.stringify({ error: "Váratlan hiba történt. Próbáld újra." }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

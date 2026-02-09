@@ -50,11 +50,31 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    if (!message || typeof message !== "string" || message.length > 10000) {
+    if (!message || typeof message !== "string" || message.trim().length === 0 || message.length > 10000) {
       return new Response(JSON.stringify({ error: "Invalid message" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Validate sessionId format
+    const sanitizedSessionId = typeof sessionId === "string" && /^[a-zA-Z0-9\-_]{0,100}$/.test(sessionId) ? sessionId : "";
+
+    // Validate and sanitize history array
+    const sanitizedHistory: { role: string; content: string }[] = [];
+    if (Array.isArray(history)) {
+      for (const item of history.slice(-50)) {
+        if (
+          item &&
+          typeof item === "object" &&
+          typeof item.role === "string" &&
+          ["user", "assistant"].includes(item.role) &&
+          typeof item.content === "string" &&
+          item.content.length <= 5000
+        ) {
+          sanitizedHistory.push({ role: item.role, content: item.content });
+        }
+      }
     }
 
     const apiKey = Deno.env.get("N8N_CHAT_API_KEY");
@@ -75,8 +95,8 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         message,
-        history: Array.isArray(history) ? history.slice(-50) : [],
-        sessionId: typeof sessionId === "string" ? sessionId.slice(0, 100) : "",
+        history: sanitizedHistory,
+        sessionId: sanitizedSessionId,
       }),
     });
 

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Partner, TopPartner, SleepingPartner, DashboardData, PartnerProductStat } from '@/types/partner';
 import { mockPartners } from '@/data/mockPartners';
 import { useToast } from '@/hooks/use-toast';
@@ -35,10 +35,10 @@ const normalizePartnerProductStat = (p: Record<string, unknown>): PartnerProduct
   db: Number(p.db ?? 0),
 });
 
-// Track whether initial fetch has already run (persists across navigations)
-let initialFetchDone = false;
+// Track which user we last fetched for (resets on user change / logout)
+let lastFetchedForUser: string | null = null;
 
-export const usePartnerData = () => {
+export const usePartnerData = (userId?: string) => {
   const [data, setData] = useState<DashboardData>({
     partners: mockPartners,
     topBest: [],
@@ -100,13 +100,13 @@ export const usePartnerData = () => {
     }
   }, [toast]);
 
-  // Auto-fetch only once per app session
+  // Auto-fetch once per user session (resets on logout/login)
   useEffect(() => {
-    if (!initialFetchDone) {
-      initialFetchDone = true;
+    if (userId && lastFetchedForUser !== userId) {
+      lastFetchedForUser = userId;
       fetchPartners();
     }
-  }, [fetchPartners]);
+  }, [userId, fetchPartners]);
 
   return {
     partners: data.partners,

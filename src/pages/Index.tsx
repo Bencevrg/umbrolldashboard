@@ -1,4 +1,5 @@
 import { useMemo, useState, useCallback } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { DataTable } from '@/components/dashboard/DataTable';
@@ -15,7 +16,8 @@ import { Partner, PartnerStats, ChatMessage } from '@/types/partner';
 import { Users, TrendingUp, FileCheck, Moon, Target, AlertTriangle, Trophy, Clock } from 'lucide-react';
 
 const Index = () => {
-  const { partners, topBest, topWorst, sleeping, partnerProductStats, isLoading, fetchPartners } = usePartnerData();
+  const { user } = useAuth();
+  const { partners, topBest, topWorst, sleeping, partnerProductStats, isLoading, fetchPartners } = usePartnerData(user?.id);
   const [activeTab, setActiveTab] = useState('partners');
   const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
   const [sleepingThreshold, setSleepingThreshold] = useState(90);

@@ -94,22 +94,24 @@ const MFAVerify = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="flex justify-center">
-            <InputOTP maxLength={6} value={code} onChange={setCode}>
-              <InputOTPGroup>
-                <InputOTPSlot index={0} />
-                <InputOTPSlot index={1} />
-                <InputOTPSlot index={2} />
-                <InputOTPSlot index={3} />
-                <InputOTPSlot index={4} />
-                <InputOTPSlot index={5} />
-              </InputOTPGroup>
-            </InputOTP>
-          </div>
+          <form onSubmit={(e) => { e.preventDefault(); handleVerify(); }}>
+            <div className="flex justify-center mb-6">
+              <InputOTP maxLength={6} value={code} onChange={setCode}>
+                <InputOTPGroup>
+                  <InputOTPSlot index={0} />
+                  <InputOTPSlot index={1} />
+                  <InputOTPSlot index={2} />
+                  <InputOTPSlot index={3} />
+                  <InputOTPSlot index={4} />
+                  <InputOTPSlot index={5} />
+                </InputOTPGroup>
+              </InputOTP>
+            </div>
 
-          <Button onClick={handleVerify} className="w-full" disabled={loading || code.length !== 6}>
-            {loading ? 'Ellenőrzés...' : 'Megerősítés'}
-          </Button>
+            <Button type="submit" className="w-full" disabled={loading || code.length !== 6}>
+              {loading ? 'Ellenőrzés...' : 'Megerősítés'}
+            </Button>
+          </form>
 
           {mfaType === 'email' && (
             <Button variant="ghost" className="w-full" onClick={sendEmailCode}>

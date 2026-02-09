@@ -111,19 +111,21 @@ const MFASetup = () => {
               <p className="text-xs text-muted-foreground mb-2">Vagy másold be kézzel a titkos kulcsot:</p>
               <code className="text-sm font-mono break-all">{totpSecret}</code>
             </div>
-            <div>
-              <input
-                type="text"
-                placeholder="6 jegyű kód"
-                value={verificationCode}
-                onChange={(e) => setVerificationCode(e.target.value)}
-                maxLength={6}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-center text-lg tracking-widest"
-              />
-            </div>
-            <Button onClick={verifyTotp} className="w-full" disabled={loading || verificationCode.length !== 6}>
-              {loading ? 'Ellenőrzés...' : 'Megerősítés'}
-            </Button>
+            <form onSubmit={(e) => { e.preventDefault(); verifyTotp(); }}>
+              <div className="mb-4">
+                <input
+                  type="text"
+                  placeholder="6 jegyű kód"
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value)}
+                  maxLength={6}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-center text-lg tracking-widest"
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={loading || verificationCode.length !== 6}>
+                {loading ? 'Ellenőrzés...' : 'Megerősítés'}
+              </Button>
+            </form>
             <Button variant="ghost" className="w-full" onClick={() => { setSelectedType(null); setTotpUri(null); setTotpSecret(null); setVerificationCode(''); }}>
               Vissza
             </Button>

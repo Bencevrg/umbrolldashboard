@@ -44,14 +44,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const role = (data?.role as AppRole) ?? null;
       const isApproved = !!data;
 
-      // Check MFA settings
-      const { data: mfa } = await supabase
-        .from('user_mfa_settings')
-        .select('is_verified, mfa_type')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      const mfaRequired = !!mfa?.is_verified;
+      // Check MFA settings via safe RPC (doesn't expose secrets)
+      const { data: mfa } = await supabase.rpc('get_my_mfa_info');
+      const mfaRow = Array.isArray(mfa) ? mfa[0] : mfa;
+      const mfaRequired = !!mfaRow?.is_verified;
 
       setState(prev => ({
         ...prev,

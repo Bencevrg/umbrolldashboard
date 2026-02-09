@@ -18,13 +18,10 @@ const MFAVerify = () => {
 
   useEffect(() => {
     if (!user) return;
-    supabase
-      .from('user_mfa_settings')
-      .select('mfa_type')
-      .eq('user_id', user.id)
-      .maybeSingle()
+    supabase.rpc('get_my_mfa_info')
       .then(({ data }) => {
-        setMfaType(data?.mfa_type ?? null);
+        const row = Array.isArray(data) ? data[0] : data;
+        setMfaType(row?.mfa_type ?? null);
       });
   }, [user]);
 

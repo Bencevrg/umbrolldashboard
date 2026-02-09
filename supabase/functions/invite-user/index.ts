@@ -47,6 +47,22 @@ Deno.serve(async (req) => {
         });
       }
 
+      // Validate that the user's email matches the invitation email
+      const { data: userData, error: userError } = await serviceClient.auth.admin.getUserById(userId);
+      if (userError || !userData?.user) {
+        return new Response(JSON.stringify({ error: "Felhasználó nem található" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (userData.user.email?.toLowerCase() !== inv.email.toLowerCase()) {
+        return new Response(JSON.stringify({ error: "Az email cím nem egyezik a meghívóval" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       // Assign role
       await serviceClient.from("user_roles").insert({
         user_id: userId,
@@ -170,7 +186,8 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error("Error:", error);
-    return new Response(JSON.stringify({ error: (error as Error).message }), {
+    console.error("invite-user error:", error);
+    return new Response(JSON.stringify({ error: "Belső szerverhiba" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

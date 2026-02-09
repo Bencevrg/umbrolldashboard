@@ -122,6 +122,13 @@ export type Database = {
           used: boolean
         }[]
       }
+      get_my_mfa_info: {
+        Args: never
+        Returns: {
+          is_verified: boolean
+          mfa_type: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

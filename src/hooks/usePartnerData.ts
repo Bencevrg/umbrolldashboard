@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Partner, TopPartner, SleepingPartner, DashboardData, PartnerProductStat } from '@/types/partner';
 import { mockPartners } from '@/data/mockPartners';
 import { useToast } from '@/hooks/use-toast';
@@ -96,6 +96,11 @@ export const usePartnerData = () => {
       setIsLoading(false);
     }
   }, [toast]);
+
+  // Auto-fetch on mount
+  useEffect(() => {
+    fetchPartners();
+  }, [fetchPartners]);
 
   return {
     partners: data.partners,

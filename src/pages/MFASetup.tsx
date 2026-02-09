@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { Shield, Mail } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 
 const MFASetup = () => {
   const { user, refreshRole } = useAuth();
@@ -98,11 +99,16 @@ const MFASetup = () => {
         <Card className="w-full max-w-md shadow-card">
           <CardHeader className="text-center">
             <CardTitle>TOTP beállítás</CardTitle>
-            <CardDescription>Add hozzá ezt a kódot az Authenticator alkalmazásodhoz</CardDescription>
+          <CardDescription>Olvasd be a QR kódot az Authenticator alkalmazásoddal</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="flex justify-center">
+              <div className="rounded-lg bg-white p-4">
+                <QRCodeSVG value={totpUri!} size={200} />
+              </div>
+            </div>
             <div className="rounded-lg bg-muted p-4 text-center">
-              <p className="text-xs text-muted-foreground mb-2">Másold be ezt a titkos kulcsot:</p>
+              <p className="text-xs text-muted-foreground mb-2">Vagy másold be kézzel a titkos kulcsot:</p>
               <code className="text-sm font-mono break-all">{totpSecret}</code>
             </div>
             <div>

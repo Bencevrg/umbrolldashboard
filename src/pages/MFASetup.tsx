@@ -116,6 +116,9 @@ const MFASetup = () => {
             <Button onClick={verifyTotp} className="w-full" disabled={loading || verificationCode.length !== 6}>
               {loading ? 'Ellenőrzés...' : 'Megerősítés'}
             </Button>
+            <Button variant="ghost" className="w-full" onClick={() => { setSelectedType(null); setTotpUri(null); setTotpSecret(null); setVerificationCode(''); }}>
+              Vissza
+            </Button>
           </CardContent>
         </Card>
       </div>

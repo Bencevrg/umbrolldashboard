@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 
 const MFAVerify = () => {
-  const { user, session, mfaRequired, mfaVerified, setMfaVerified, loading: authLoading } = useAuth();
+  const { user, session, mfaRequired, mfaVerified, setMfaVerified, signOut, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [code, setCode] = useState('');
@@ -116,6 +116,10 @@ const MFAVerify = () => {
               Kód újraküldése
             </Button>
           )}
+
+          <Button variant="ghost" className="w-full" onClick={signOut}>
+            Kijelentkezés
+          </Button>
         </CardContent>
       </Card>
     </div>

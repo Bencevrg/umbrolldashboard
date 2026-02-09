@@ -36,6 +36,28 @@ Deno.serve(async (req) => {
     }
 
     const { userId, code, mfaType } = await req.json();
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const codeRegex = /^\d{6}$/;
+
+    if (!userId || typeof userId !== "string" || !uuidRegex.test(userId)) {
+      return new Response(JSON.stringify({ error: "Invalid userId" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (!code || typeof code !== "string" || !codeRegex.test(code)) {
+      return new Response(JSON.stringify({ error: "Invalid code format" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (!mfaType || !["email", "totp"].includes(mfaType)) {
+      return new Response(JSON.stringify({ error: "Invalid MFA type" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const callerUserId = claimsData.claims.sub;
 
     if (userId !== callerUserId) {

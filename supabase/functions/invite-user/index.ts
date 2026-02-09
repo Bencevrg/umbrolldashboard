@@ -19,11 +19,20 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { action } = body;
 
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
     // Accept invitation (no auth required)
     if (action === "accept") {
       const { token, userId } = body;
-      if (!token || !userId) {
-        return new Response(JSON.stringify({ error: "Missing token or userId" }), {
+      if (!token || typeof token !== "string" || token.length > 200) {
+        return new Response(JSON.stringify({ error: "Invalid token" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (!userId || typeof userId !== "string" || !uuidRegex.test(userId)) {
+        return new Response(JSON.stringify({ error: "Invalid userId" }), {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -121,8 +130,14 @@ Deno.serve(async (req) => {
     }
 
     const { email, role } = body;
-    if (!email) {
-      return new Response(JSON.stringify({ error: "Email szükséges" }), {
+    if (!email || typeof email !== "string" || !emailRegex.test(email) || email.length > 255) {
+      return new Response(JSON.stringify({ error: "Érvénytelen email cím" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (role && !["admin", "user"].includes(role)) {
+      return new Response(JSON.stringify({ error: "Érvénytelen szerepkör" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

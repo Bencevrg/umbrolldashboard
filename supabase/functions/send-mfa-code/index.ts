@@ -36,6 +36,13 @@ Deno.serve(async (req) => {
     }
 
     const { userId } = await req.json();
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!userId || typeof userId !== "string" || !uuidRegex.test(userId)) {
+      return new Response(JSON.stringify({ error: "Invalid userId" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     const callerUserId = claimsData.claims.sub;
 
     // Only allow users to send MFA code to themselves

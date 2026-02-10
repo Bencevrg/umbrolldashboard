@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ArrowLeft, Key, AlertCircle, CheckCircle } from 'lucide-react';
+import { validatePassword, PASSWORD_REQUIREMENTS } from '@/lib/passwordValidation';
 
 const ChangePassword = () => {
   const navigate = useNavigate();
@@ -23,8 +24,9 @@ const ChangePassword = () => {
     e.preventDefault();
     setError('');
 
-    if (newPassword.length < 6) {
-      setError('Az új jelszónak legalább 6 karakter hosszúnak kell lennie.');
+    const check = validatePassword(newPassword);
+    if (!check.isValid) {
+      setError(check.errors.join(', '));
       return;
     }
 
@@ -114,8 +116,9 @@ const ChangePassword = () => {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
-                  minLength={6}
+                  minLength={8}
                 />
+                <p className="text-xs text-muted-foreground">{PASSWORD_REQUIREMENTS}</p>
               </div>
 
               <div className="space-y-2">

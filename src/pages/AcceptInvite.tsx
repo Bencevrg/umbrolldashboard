@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import umbrollLogo from '@/assets/umbroll-logo.png';
+import { validatePassword, PASSWORD_REQUIREMENTS } from '@/lib/passwordValidation';
 
 interface InvitationData {
   id: string;
@@ -41,9 +42,12 @@ const AcceptInvite = () => {
       });
   }, [token]);
 
+  const passwordCheck = validatePassword(password);
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!invitation || !token) return;
+    if (!passwordCheck.isValid) return;
     setSubmitting(true);
 
     try {
@@ -128,10 +132,16 @@ const AcceptInvite = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                minLength={6}
+                minLength={8}
               />
+              <p className="text-xs text-muted-foreground mt-1">{PASSWORD_REQUIREMENTS}</p>
+              {password.length > 0 && !passwordCheck.isValid && (
+                <ul className="text-xs text-destructive mt-1 list-disc list-inside">
+                  {passwordCheck.errors.map((err, i) => <li key={i}>{err}</li>)}
+                </ul>
+              )}
             </div>
-            <Button type="submit" className="w-full" disabled={submitting}>
+            <Button type="submit" className="w-full" disabled={submitting || !passwordCheck.isValid}>
               {submitting ? 'Regisztráció...' : 'Fiók létrehozása'}
             </Button>
           </form>

@@ -1,64 +1,72 @@
 
+# Dummy adatok eltavolitasa - csak valos adatok megjelenitese
 
-# Admin felhasználo kezelesi fejlesztesek
+## Cel
 
-## Jelenlegi helyzet
-
-Az admin feluleten a felhasznalok tablazatban csak a `user_id` toredeke latszik (elso 8 karakter). Az email cimek az `auth.users` tablaban vannak, ami nem erheto el kozvetlenul a kliensbol. Felhasznalo torles funkio jelenleg nem letezik.
+A dashboard jelenleg mock/dummy adatokkal indul, ami felrevezeto lehet. Ehelyett toltes allapotot (loading/skeleton) kell mutatni amig a valos adatok meg nem erkeznek, es hiba eseten hibauzenet jelenik meg.
 
 ## Valtozasok
 
-### 1. Uj edge function: `admin-users`
+### 1. `src/data/mockPartners.ts` - Torles
 
-Egy uj backend fuggveny letrehozasa (`supabase/functions/admin-users/index.ts`), amely ket muveletet tamogat:
+A teljes fajl torlese, mivel tobbet nem hasznaljuk.
 
-- **`list`**: Lekeri az osszes `user_roles` rekordot, majd az `auth.admin.listUsers()` segitsegevel osszepaositja a felhasznalok email cimeit a user ID-khez. Visszaad egy tombot: `{ id, user_id, role, email }`.
+### 2. `src/hooks/usePartnerData.ts` - Ures tombok alapertelmezettnek
 
-- **`delete`**: Torol egy felhasznalot: eloszor torli a `user_roles` es `user_mfa_settings` bejegyzeseket, majd az `auth.admin.deleteUser()` hivassal magat a felhasznalot is. Az admin nem torelheti onmagat.
+- Az `import { mockPartners }` sor eltavolitasa.
+- A `cachedData` es a kijelentkezeskori reset ures tombokkel inicializalodik (`partners: []`) a `mockPartners` helyett.
+- Uj `hasFetched` boolean allapot bevezetese, ami jelzi, hogy legalabb egyszer lefutott-e mar az adatlekeres (sikeresen vagy sikertelenul). Ez segit megkulonboztetni a "meg nem kertuk le" es a "lekertuk de ures" allapotokat.
 
-Mindket muvelet ellenorzi, hogy a hivo admin jogosultsaggal rendelkezik-e (a meglevo `invite-user` mintajat kovetjuk).
+### 3. `src/pages/Index.tsx` - Loading es ures allapot kezelese
 
-### 2. Frontend modositasok: `AdminUsers.tsx`
+- A `usePartnerData` hook-bol egy uj `hasFetched` erteket is kiolvasunk.
+- Minden adatmegjelenitesi tab-nel (partners, best, worst, sleeping, categories):
+  - Ha `isLoading` es meg nem volt fetch (`!hasFetched`): **Skeleton/loading allapot** megjelenites (pl. animalt placeholder kartyak es tablazat).
+  - Ha `hasFetched` es a tomb ures: **"Nincsenek adatok"** uzenet a Frissites gombbal.
+  - Ha vannak adatok: a jelenlegi megjelenites valtozatlanul.
 
-- A `UserRole` interface kiegeszitese egy `email` mezovel.
-- A `fetchData` fuggveny az uj `admin-users` edge function `list` muveletet hivja a kozvetlen Supabase lekeres helyett.
-- A felhasznalok tablazatban uj "Email" oszlop jelenik meg.
-- Uj "Torles" gomb minden felhasznalohoz (kiveve az aktualis admin felhasznalot).
-- Torles elott megerosito dialogus (`AlertDialog`) jelenik meg, hogy elkeruljuk a veletlen torlest.
-- A `deleteUser` fuggveny az `admin-users` edge function `delete` muveletet hivja.
+### 4. Loading megjelenites
 
-### 3. Felhasznalo torles biztonsagi szempontok
-
-- Csak admin vegezheti (edge function ellenorzi).
-- Az admin nem torelheti sajat fiokjat.
-- Megerosito dialog a kliensen.
-- A torles kaszkadban torli: user_roles, user_mfa_settings, auth.users rekordot.
+A meglevo `Skeleton` komponenst (`src/components/ui/skeleton.tsx`) hasznaljuk a loading allapothoz. A stats kartyak, grafikonok es tablazat helyett skeleton elemek jelennek meg a betoltes soran.
 
 ---
 
 ## Technikai reszletek
 
-### Edge function struktura (`admin-users/index.ts`)
+### usePartnerData.ts modositasok
 
+```text
+Uj allapot:
+  hasFetched: boolean (false alapertelmezett)
+
+cachedData alapertek:
+  { partners: [], topBest: [], topWorst: [], sleeping: [], partnerProductStats: [] }
+
+fetchPartners vegen (finally):
+  hasFetched = true (mind sikeres, mind sikertelen eseten)
+
+Kijelentkezeskor:
+  cachedData = { partners: [], ... }
+  hasFetched = false
+
+Return:
+  + hasFetched
 ```
-POST { action: "list" }
-  -> Admin ellenorzes (JWT + user_roles tabla)
-  -> auth.admin.listUsers() + user_roles lekeres
-  -> Visszaad: [{ id, user_id, role, email, created_at }]
 
-POST { action: "delete", userId: "uuid" }
-  -> Admin ellenorzes
-  -> Nem engedi sajat magat torolni
-  -> Torli: user_mfa_settings, user_roles (serviceClient)
-  -> Torli: auth.admin.deleteUser(userId)
-  -> Visszaad: { success: true }
+### Index.tsx loading minta
+
+A `renderContent()` partners case elejen:
+
+```text
+if (isLoading && !hasFetched) {
+  -> Skeleton kartyak (5 db) + skeleton tablazat sorok
+}
+
+if (hasFetched && partners.length === 0) {
+  -> "Nincsenek adatok" uzenet + Frissites gomb
+}
+
+// egyebkent a jelenlegi megjelenites
 ```
 
-### AdminUsers.tsx modositasok
-
-- Uj interface: `email?: string` mezo hozzaadasa
-- `fetchData`: `supabase.functions.invoke('admin-users', { body: { action: 'list' } })`
-- Tablazat: Email oszlop hozzaadasa a User ID utan
-- Torles gomb: `AlertDialog` megerositovel
-- `deleteUser(userId)`: `supabase.functions.invoke('admin-users', { body: { action: 'delete', userId } })`
-
+Ugyanez a minta alkalmazando a best, worst, sleeping es categories tabokra is.

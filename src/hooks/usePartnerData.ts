@@ -106,6 +106,9 @@ export const usePartnerData = (userId?: string) => {
       lastFetchedForUser = userId;
       fetchPartners();
     }
+    if (!userId) {
+      lastFetchedForUser = null;
+    }
   }, [userId, fetchPartners]);
 
   return {

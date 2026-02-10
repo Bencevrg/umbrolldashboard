@@ -1,4 +1,5 @@
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { StatsCard } from '@/components/dashboard/StatsCard';
@@ -17,8 +18,9 @@ import { Users, TrendingUp, FileCheck, Moon, Target, AlertTriangle, Trophy, Cloc
 
 const Index = () => {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { partners, topBest, topWorst, sleeping, partnerProductStats, isLoading, fetchPartners } = usePartnerData(user?.id);
-  const [activeTab, setActiveTab] = useState('partners');
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'partners');
   const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
   const [sleepingThreshold, setSleepingThreshold] = useState(90);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);

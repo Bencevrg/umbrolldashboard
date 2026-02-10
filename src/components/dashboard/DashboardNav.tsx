@@ -49,7 +49,12 @@ export const DashboardNav = ({ activeTab, onTabChange }: DashboardNavProps) => {
           {role === 'admin' && (
             <button
               onClick={() => navigate('/admin/users')}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all whitespace-nowrap text-muted-foreground hover:bg-muted hover:text-foreground"
+              className={cn(
+                'flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-sm transition-all whitespace-nowrap',
+                activeTab === 'admin'
+                  ? 'bg-primary text-primary-foreground shadow-md'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+              )}
             >
               <ShieldCheck className="h-4 w-4" />
               <span>Admin</span>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,6 +29,7 @@ interface Invitation {
 
 const AdminUsers = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [roles, setRoles] = useState<UserRole[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
@@ -85,7 +87,7 @@ const AdminUsers = () => {
   };
 
   return (
-    <DashboardLayout activeTab="admin" onTabChange={() => {}}>
+    <DashboardLayout activeTab="admin" onTabChange={(tab) => navigate(`/?tab=${tab}`)}>
       <div className="space-y-8">
         {/* Invite Section */}
         <Card>

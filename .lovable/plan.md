@@ -1,32 +1,64 @@
 
 
-# Jelszo valtoztatas funkció
+# Admin felhasználo kezelesi fejlesztesek
 
-## Osszefoglalo
+## Jelenlegi helyzet
 
-A bejelentkezett felhasznalok egy uj oldalon ("Jelszo valtoztatas") megadhatjak a jelenlegi jelszavukat es beallithatnak egy ujat. Az oldal elerheto lesz a fejlec felhasznaloi menujebol.
+Az admin feluleten a felhasznalok tablazatban csak a `user_id` toredeke latszik (elso 8 karakter). Az email cimek az `auth.users` tablaban vannak, ami nem erheto el kozvetlenul a kliensbol. Felhasznalo torles funkio jelenleg nem letezik.
 
 ## Valtozasok
 
-### 1. Uj oldal: `src/pages/ChangePassword.tsx`
-- Egy egyszerű űrlap harom mezővel:
-  - Jelenlegi jelszo (validaciora)
-  - Uj jelszo (min. 6 karakter)
-  - Uj jelszo megerositese
-- A Supabase `updateUser({ password })` metodusat hasznaljuk -- ez a bejelentkezett felhasznalo jelszavat frissiti
-- Sikeres valtoztatas utan visszairanyit a fooldara
-- "Vissza" gomb a navigaciohoz
+### 1. Uj edge function: `admin-users`
 
-### 2. Uj route: `src/App.tsx`
-- `/change-password` utvonal hozzaadasa `ProtectedRoute`-on belul
+Egy uj backend fuggveny letrehozasa (`supabase/functions/admin-users/index.ts`), amely ket muveletet tamogat:
 
-### 3. Menu bovitese: `src/components/dashboard/DashboardHeader.tsx`
-- Uj menuelem: "Jelszo valtoztatas" (Key ikon) a 2FA beallitas es a kijelentkezes kozott
+- **`list`**: Lekeri az osszes `user_roles` rekordot, majd az `auth.admin.listUsers()` segitsegevel osszepaositja a felhasznalok email cimeit a user ID-khez. Visszaad egy tombot: `{ id, user_id, role, email }`.
+
+- **`delete`**: Torol egy felhasznalot: eloszor torli a `user_roles` es `user_mfa_settings` bejegyzeseket, majd az `auth.admin.deleteUser()` hivassal magat a felhasznalot is. Az admin nem torelheti onmagat.
+
+Mindket muvelet ellenorzi, hogy a hivo admin jogosultsaggal rendelkezik-e (a meglevo `invite-user` mintajat kovetjuk).
+
+### 2. Frontend modositasok: `AdminUsers.tsx`
+
+- A `UserRole` interface kiegeszitese egy `email` mezovel.
+- A `fetchData` fuggveny az uj `admin-users` edge function `list` muveletet hivja a kozvetlen Supabase lekeres helyett.
+- A felhasznalok tablazatban uj "Email" oszlop jelenik meg.
+- Uj "Torles" gomb minden felhasznalohoz (kiveve az aktualis admin felhasznalot).
+- Torles elott megerosito dialogus (`AlertDialog`) jelenik meg, hogy elkeruljuk a veletlen torlest.
+- A `deleteUser` fuggveny az `admin-users` edge function `delete` muveletet hivja.
+
+### 3. Felhasznalo torles biztonsagi szempontok
+
+- Csak admin vegezheti (edge function ellenorzi).
+- Az admin nem torelheti sajat fiokjat.
+- Megerosito dialog a kliensen.
+- A torles kaszkadban torli: user_roles, user_mfa_settings, auth.users rekordot.
+
+---
 
 ## Technikai reszletek
 
-- A `supabase.auth.updateUser({ password: newPassword })` hivast hasznaljuk -- ez a Supabase beepitett funkcioja, nem kell hozza edge function
-- A jelenlegi jelszo ellenorzeset a `supabase.auth.signInWithPassword()` hivassal vegezzuk el a frissites elott, hogy megbizonyosodjunk rola a felhasznalo jogosult a valtoztatasra
-- Kliensoldalon ellenorizzuk, hogy az uj jelszo es a megerosites egyezik-e
-- Minimum 6 karakteres jelszot varunk el
+### Edge function struktura (`admin-users/index.ts`)
+
+```
+POST { action: "list" }
+  -> Admin ellenorzes (JWT + user_roles tabla)
+  -> auth.admin.listUsers() + user_roles lekeres
+  -> Visszaad: [{ id, user_id, role, email, created_at }]
+
+POST { action: "delete", userId: "uuid" }
+  -> Admin ellenorzes
+  -> Nem engedi sajat magat torolni
+  -> Torli: user_mfa_settings, user_roles (serviceClient)
+  -> Torli: auth.admin.deleteUser(userId)
+  -> Visszaad: { success: true }
+```
+
+### AdminUsers.tsx modositasok
+
+- Uj interface: `email?: string` mezo hozzaadasa
+- `fetchData`: `supabase.functions.invoke('admin-users', { body: { action: 'list' } })`
+- Tablazat: Email oszlop hozzaadasa a User ID utan
+- Torles gomb: `AlertDialog` megerositovel
+- `deleteUser(userId)`: `supabase.functions.invoke('admin-users', { body: { action: 'delete', userId } })`
 

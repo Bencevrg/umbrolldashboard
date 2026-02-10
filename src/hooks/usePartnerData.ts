@@ -1,6 +1,5 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Partner, TopPartner, SleepingPartner, DashboardData, PartnerProductStat } from '@/types/partner';
-import { mockPartners } from '@/data/mockPartners';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -37,8 +36,9 @@ const normalizePartnerProductStat = (p: Record<string, unknown>): PartnerProduct
 
 // Module-level cache: survives component unmount/remount during navigation
 let lastFetchedForUser: string | null = null;
+let cachedHasFetched = false;
 let cachedData: DashboardData = {
-  partners: mockPartners,
+  partners: [],
   topBest: [],
   topWorst: [],
   sleeping: [],
@@ -48,6 +48,7 @@ let cachedData: DashboardData = {
 export const usePartnerData = (userId?: string) => {
   const [data, setData] = useState<DashboardData>(cachedData);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasFetched, setHasFetched] = useState(cachedHasFetched);
   const { toast } = useToast();
 
   const fetchPartners = useCallback(async () => {
@@ -100,6 +101,8 @@ export const usePartnerData = (userId?: string) => {
       });
     } finally {
       setIsLoading(false);
+      cachedHasFetched = true;
+      setHasFetched(true);
     }
   }, [toast]);
 
@@ -111,7 +114,8 @@ export const usePartnerData = (userId?: string) => {
     }
     if (!userId) {
       lastFetchedForUser = null;
-      cachedData = { partners: mockPartners, topBest: [], topWorst: [], sleeping: [], partnerProductStats: [] };
+      cachedHasFetched = false;
+      cachedData = { partners: [], topBest: [], topWorst: [], sleeping: [], partnerProductStats: [] };
     }
   }, [userId, fetchPartners]);
 
@@ -122,6 +126,7 @@ export const usePartnerData = (userId?: string) => {
     sleeping: data.sleeping,
     partnerProductStats: data.partnerProductStats,
     isLoading,
+    hasFetched,
     fetchPartners,
   };
 };

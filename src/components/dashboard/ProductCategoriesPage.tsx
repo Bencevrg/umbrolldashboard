@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { PartnerProductStat } from '@/types/partner';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -11,6 +12,7 @@ import { Search, LayoutGrid, BarChart3, Package } from 'lucide-react';
 interface ProductCategoriesPageProps {
   data: PartnerProductStat[];
   isLoading: boolean;
+  hasFetched?: boolean;
   onRefresh: () => void;
 }
 
@@ -25,7 +27,7 @@ const CHART_COLORS = [
   'hsl(340, 65%, 55%)',
 ];
 
-export const ProductCategoriesPage = ({ data, isLoading, onRefresh }: ProductCategoriesPageProps) => {
+export const ProductCategoriesPage = ({ data, isLoading, hasFetched = true, onRefresh }: ProductCategoriesPageProps) => {
   const [searchPartner, setSearchPartner] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
@@ -99,6 +101,21 @@ export const ProductCategoriesPage = ({ data, isLoading, onRefresh }: ProductCat
       .filter(p => p.toLowerCase().includes(searchPartner.toLowerCase()))
       .slice(0, 5);
   }, [uniquePartners, searchPartner]);
+
+  if (isLoading && !hasFetched) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <Skeleton className="h-7 w-64 mb-2" />
+            <Skeleton className="h-4 w-48" />
+          </div>
+        </div>
+        <Card><CardContent className="pt-6"><Skeleton className="h-[300px] w-full" /></CardContent></Card>
+        <Card><CardContent className="pt-6"><Skeleton className="h-[200px] w-full" /></CardContent></Card>
+      </div>
+    );
+  }
 
   if (data.length === 0) {
     return (
